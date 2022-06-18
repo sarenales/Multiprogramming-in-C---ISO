@@ -35,16 +35,19 @@ int main(int argc, char *argv[]) {
 		error("No se ha introducido ningun numero en el segundo parametro.");	
 	
 	
-	if((clockid=fork()) == 0){
-		execlp("clock", "clock", timer, NULL);
-	}
 	
-	
-	switch(child=fork()){
-		case -1: error("fork child");
+	switch(clockid=fork()){
+		case -1: 
+			error("fork child clock");
 			break;
 			
-		case 0: /* HIJO*/
+			
+		case 0: /*hijo*/
+			execlp("./clock", "./clock", timer, NULL);
+			break;
+			
+			
+		case 1: /* padre*/
 			// Encargado de crear los procesos concurrentes.
 			for (i = 2; i < argc ; i++)
 			{		
@@ -58,6 +61,8 @@ int main(int argc, char *argv[]) {
 				
 				printf("Proceso subhijo : %d \n", childp);
 				
+				while(wait(NULL) != childp);
+				
 				printf("Programa numero %d (%s)terminado.---------------------\n ", i-1,argv[i]);
 				
 				cont ++; 
@@ -66,42 +71,26 @@ int main(int argc, char *argv[]) {
 			}
 			while(wait(NULL) != child);
 			
-			printf("%d proceso hijo terminado \n", child);
+			printf("%d comando terminado \n", child);
 			printf(" \n");
 			printf(" \n");
 
 			
 			break;
 		
+		
+		
 	}	
 	
 	
-	// while(wait(NULL) != child);
-	
-	printf("ID child %d  !!!!!!!!!!!!!!!\n", child);
-
-	printf("id: %d \n", id);
+	// while(wait(NULL) != child);	
 	
 	id = wait(NULL);
 	
-	printf("id: %d \n", id);
-   
-	if(id == child)
-    { 	
-		printf("Los hijos terminan antes del tiempo establecido. \n");
-		time(&t2);
-		t2 = time(NULL);
-		time(&t2);
-		
-		
-		printf("------------------------------------ \n");
-		printf("------------------------------------ \n");
-		printf("El tiempo total es de %d segundos. \n", t2 - t0);
-		kill(clockid, SIGKILL);
-		exit(0);
-    }	
-    else
+	
+    if(id == clockid)
     { 
+		printf("id: %d \n", id);
         printf("El reloj termina antes que los procesos.\n");	
 		printf("%d procesos realizados de %d.\n", cont, argc-2);
 		time(&t2);
@@ -110,11 +99,20 @@ int main(int argc, char *argv[]) {
 		printf("------------------------------------ \n");
 		printf("------------------------------------ \n");
 		printf("El tiempo total es de %d segundos. \n", t2 - t0); 
-		
-		kill(child, SIGKILL);
-        wait(NULL);
 		exit(0);
-    }
+    }else
+    { 	
+		printf("id: %d \n", id);
+		printf("Los hijos terminan antes del tiempo establecido. \n");
+		time(&t2);
+		t2 = time(NULL);
+		time(&t2);
+		printf("------------------------------------ \n");
+		printf("------------------------------------ \n");
+		printf("El tiempo total es de %d segundos. \n", t2 - t0);
+		kill(clockid, SIGKILL);
+		exit(0);
+    }	
 	
 	return (0);
 	
