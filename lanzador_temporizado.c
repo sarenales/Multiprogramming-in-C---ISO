@@ -10,16 +10,18 @@
 
 #define error(a){perror(a); exit(1);};
 
-// lanzador_temporizado 10 dat ls ps sleep20 who
+// a 10 dat ls ps sleep20 who
 
 int main(int argc, char *argv[]) { 
 
-	int timer, i, child, childp, id, cont;
+	int clockid, timer, i, child, childp, id, cont;
 	time_t t0, t1,t2;
 
 	// Empieza a contar el timer.
 	t0 = time(NULL);
 	time(&t0);
+	
+	
 	
 	
 	// Control 1: Numero de parametros dentro de lo establecido.
@@ -32,9 +34,16 @@ int main(int argc, char *argv[]) {
 	if(timer <= 0 )
 		error("No se ha introducido ningun numero en el segundo parametro.");	
 	
+	
+	if((clockid=fork()) == 0){
+		execlp("clock", "clock", timer, NULL);
+	}
+	
+	
 	switch(child=fork()){
 		case -1: error("fork child");
 			break;
+			
 		case 0: /* HIJO*/
 			// Encargado de crear los procesos concurrentes.
 			for (i = 2; i < argc ; i++)
@@ -49,14 +58,13 @@ int main(int argc, char *argv[]) {
 				
 				printf("Proceso subhijo : %d \n", childp);
 				
-				while(wait(NULL) != childp);
-				
 				printf("Programa numero %d (%s)terminado.---------------------\n ", i-1,argv[i]);
 				
 				cont ++; 
 				
 				kill(childp, SIGKILL);
 			}
+			while(wait(NULL) != child);
 			
 			printf("%d proceso hijo terminado \n", child);
 			printf(" \n");
@@ -65,19 +73,14 @@ int main(int argc, char *argv[]) {
 			
 			break;
 		
-		default: /* PADRE*/
-			printf("Proceso clock: %d \n", getpid());
-			//printf(" \n");
-			sleep(atoi(argv[1]));
-			break;		
-		
 	}	
+	
 	
 	// while(wait(NULL) != child);
 	
-	// printf("ID child %d  !!!!!!!!!!!!!!!\n", child);
+	printf("ID child %d  !!!!!!!!!!!!!!!\n", child);
 
-	// printf("id: %d \n", id);
+	printf("id: %d \n", id);
 	
 	id = wait(NULL);
 	
@@ -90,9 +93,11 @@ int main(int argc, char *argv[]) {
 		t2 = time(NULL);
 		time(&t2);
 		
+		
 		printf("------------------------------------ \n");
 		printf("------------------------------------ \n");
 		printf("El tiempo total es de %d segundos. \n", t2 - t0);
+		kill(clockid, SIGKILL);
 		exit(0);
     }	
     else
